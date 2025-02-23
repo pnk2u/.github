@@ -1,0 +1,32 @@
+name: Suggest a new Feature
+description: "Suggest a new feature or compatibility with another mod"
+labels: ["suggestion"]
+title: "[SUGGESTION]: "
+body:
+  - type: dropdown
+    id: server-only-issue
+    attributes:
+      label: Where did you encounter this issue?
+      options:
+        - "Singleplayer"
+        - "As Server Host"
+        - Unsure or Neither
+    validations:
+      required: true
+  - type: input
+    id: mc-version
+    attributes:
+      label: Minecraft Version
+      description: What version of Minecraft are you playing?
+      placeholder: e.g. 1.21.4
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Suggestion
+      description: Describe the suggested feature and if applicable, what is different from the current behavior.
+      placeholder: |
+            The _Example_ Block only works with _Example_ Items but I would love to use _Other Example_ Items, too.
+    validations:
+      required: true

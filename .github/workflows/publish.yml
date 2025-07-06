@@ -28,7 +28,7 @@ jobs:
         with:
           distribution: 'adopt-hotspot'
           java-version: ${{ github.ref == 'refs/heads/1.20.1' && '17' || '21' }}
-          cache: 'gradle'
+          # cache: 'gradle'
 
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew

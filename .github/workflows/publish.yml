@@ -23,11 +23,11 @@ jobs:
           fi
         continue-on-error: false
 
-      - name: set up JDK
+      - name: set up JDK 21
         uses: actions/setup-java@v2
         with:
           distribution: 'adopt-hotspot'
-          java-version: ${{ github.ref == 'refs/heads/1.20.1' && '17' || '21' }}
+          java-version: 21
           # cache: 'gradle'
 
       - name: make gradle wrapper executable

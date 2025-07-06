@@ -14,13 +14,14 @@ jobs:
           if head -n 1 CHANGELOG.md | grep -q '<!--\s*publish\s*=\s*true\s*-->'; then
               echo "Publish flag set to true. Starting publishing action."
           elif head -n 1 CHANGELOG.md | grep -q '<!--\s*publish\s*=\s*false\s*-->'; then
-              echo "Publish flag set to false. Skipping publishing action."
-              exit 0
+              echo "Publish flag set to false. Stopping publishing action."
+              exit 1
           else
               echo "Missing publish flag in line 1. Skipping publishing action and exiting with error."
               echo "Please add '<!-- publish = true -->' or '<!-- publish = false -->' to the first line of CHANGELOG.md."
               exit 1
           fi
+        continue-on-error: false
 
       - name: set up JDK
         uses: actions/setup-java@v2

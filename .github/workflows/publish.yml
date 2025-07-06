@@ -9,23 +9,24 @@ jobs:
 
       - uses: actions/checkout@v2
 
-      - name: Check for publish flag
+      - name: check for publish flag
         run: |
-          if head -n 1 CHANGELOG.md | grep -q 'publish\s*=\s*true'; then
+          if head -n 1 CHANGELOG.md | grep -q '<!--\s*publish\s*=\s*true\s*-->'; then
               echo "Publish flag set to true. Starting publishing action."
-              sed -i -e '1d' CHANGELOG.md
-            elif head -n 1 CHANGELOG.md | grep -q 'publish\s*=\s*false'; then
+          elif head -n 1 CHANGELOG.md | grep -q '<!--\s*publish\s*=\s*false\s*-->'; then
               echo "Publish flag set to false. Skipping publishing action."
               exit 0
-            else
+          else
               echo "Missing publish flag in line 1. Skipping publishing action and exiting with error."
-              echo "Please add 'publish = true' or 'publish = false' to the first line of CHANGELOG.md."
+              echo "Please add '<!-- publish = true -->' or '<!-- publish = false -->' to the first line of CHANGELOG.md."
               exit 1
           fi
 
-      - name: Get Java Version
+      - name: get java version from temp file
         id: get_java_version
         run: echo "::set-output name=version::$(cat build/tmp/java_version.txt)"
+      - name: delete java version temp file
+        run: rm build/tmp/java_version.txt
 
       - name: set up JDK ${{ steps.get_java_version.outputs.version }}
         uses: actions/setup-java@v2
@@ -68,11 +69,49 @@ jobs:
           retry-delay: 10000
           fail-mode: fail
 
-      - name: Revert publish flag to false
+      - name: update CHANGELOG_history.md
         run: |
-          sed -i '1i publish = false // This line will be temporarily removed when the changelog is published' CHANGELOG.md
+          cat CHANGELOG.md CHANGELOG_history.md > temp && mv temp CHANGELOG_history.md
+          sed -i '1d' CHANGELOG_history.md
+          
+      - name: update README.md with CHANGELOG_history.md
+        run: |
+          changelog_start_marker='<!-- changelog-history-start -->'
+          changelog_end_marker='<!-- changelog-history-end -->'
+      
+          if [[ ! -f README.md || ! -s README.md ]]; then
+            echo "$changelog_start_marker" > README.md
+            cat CHANGELOG_history.md >> README.md
+            echo "$changelog_end_marker" >> README.md
+          else
+            start_line=$(grep -n "$changelog_start_marker" README.md | cut -d: -f1)
+            end_line=$(grep -n "$changelog_end_marker" README.md | cut -d: -f1)
+            if [[ -n "$start_line" && -n "$end_line" ]]; then
+              if [[ "$start_line" -ge "$end_line" || "$start_line" -eq "$end_line" ]]; then
+                echo "The changelog-history markers are in incorrect order and/or in the same line in README.md"
+                exit 1
+              sed -i "$((start_line+1)),$((end_line-1))d" README.md
+              sed -i "$((start_line))r CHANGELOG_history.md" README.md
+            elif [[ -z "$start_line" && -z "$end_line" ]]; then
+              echo "No changelog-history markers found in README.md. Appending changelog history with start and end markers at the bottom of the file."
+              echo "$changelog_start_marker" >> README.md
+              cat CHANGELOG_history.md >> README.md
+              echo "$changelog_end_marker" >> README.md
+          else
+            echo "Incomplete changelog history markers found in README.md"
+            exit 1
+          fi
+
+      - name: reset CHANGELOG.md
+        run: |
+          echo '<!-- publish = false -->' > CHANGELOG.md
+
+      - name: commit and push changelog updates
+        run: |
           git config --global user.name "pnk2u"
           git config --global user.email "159317511+pnk2u@users.noreply.github.com"
           git add CHANGELOG.md
-          git commit -m "Revert publish flag to false"
+          git add CHANGELOG_history.md
+          git add README.md
+          git commit -m "Write to changelog history and reset changelog file"
           git push

@@ -1,0 +1,78 @@
+name: publish
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - name: Check for publish flag
+        run: |
+          if head -n 1 CHANGELOG.md | grep -q 'publish\s*=\s*true'; then
+              echo "Publish flag set to true. Starting publishing action."
+              sed -i -e '1d' CHANGELOG.md
+            elif head -n 1 CHANGELOG.md | grep -q 'publish\s*=\s*false'; then
+              echo "Publish flag set to false. Skipping publishing action."
+              exit 0
+            else
+              echo "Missing publish flag in line 1. Skipping publishing action and exiting with error."
+              echo "Please add 'publish = true' or 'publish = false' to the first line of CHANGELOG.md."
+              exit 1
+          fi
+
+      - name: Get Java Version
+        id: get_java_version
+        run: echo "::set-output name=version::$(cat build/tmp/java_version.txt)"
+
+      - name: set up JDK ${{ steps.get_java_version.outputs.version }}
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt-hotspot'
+          java-version: ${{ steps.get_java_version.outputs.version }}
+          cache: 'gradle'
+
+      - name: make gradle wrapper executable
+        run: chmod +x ./gradlew
+      - name: build files
+        run: ./gradlew build
+
+      - name: read info
+        id: properties
+        uses: christian-draeger/read-properties@1.1.1
+        with:
+          path: './gradle.properties'
+          properties: 'archives_base_name mod_name mod_version minecraft_version_name'
+
+      - uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-featured: true
+          modrinth-unfeature-mode: intersection
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+
+          name: '${{ steps.properties.outputs.mod_name }} ${{ steps.properties.outputs.mod_version }} + ${{ steps.properties.outputs.minecraft_version_name }}'
+          version: '${{ steps.properties.outputs.mod_version }}'
+
+          game-version-filter: releases
+
+          version-type: release
+          files: 'build/libs/${{ steps.properties.outputs.archives_base_name }}-${{ steps.properties.outputs.mod_version }}+${{ steps.properties.outputs.minecraft_version_name }}-(Fabric|Quilt|Forge|NeoForge).jar'
+
+          changelog-file: CHANGELOG.md
+
+          retry-attempts: 2
+          retry-delay: 10000
+          fail-mode: fail
+
+      - name: Revert publish flag to false
+        run: |
+          sed -i '1i publish = false // This line will be temporarily removed when the changelog is published' CHANGELOG.md
+          git config --global user.name "pnk2u"
+          git config --global user.email "159317511+pnk2u@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "Revert publish flag to false"
+          git push

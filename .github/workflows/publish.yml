@@ -1,6 +1,6 @@
 name: publish
 
-on: workflow_dispatch
+on: workflow_call
 
 jobs:
   build:
@@ -71,6 +71,9 @@ jobs:
 
       - name: update CHANGELOG_history.md
         run: |
+          if [[ ! -f CHANGELOG_history.md ]]; then
+            touch CHANGELOG_history.md
+          fi
           cat CHANGELOG.md CHANGELOG_history.md > temp && mv temp CHANGELOG_history.md
           sed -i '1d' CHANGELOG_history.md
           

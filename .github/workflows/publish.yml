@@ -22,17 +22,11 @@ jobs:
               exit 1
           fi
 
-      - name: get java version from temp file
-        id: get_java_version
-        run: echo "::set-output name=version::$(cat build/tmp/java_version.txt)"
-      - name: delete java version temp file
-        run: rm build/tmp/java_version.txt
-
-      - name: set up JDK ${{ steps.get_java_version.outputs.version }}
+      - name: set up JDK
         uses: actions/setup-java@v2
         with:
           distribution: 'adopt-hotspot'
-          java-version: ${{ steps.get_java_version.outputs.version }}
+          java-version: ${{ github.ref == 'refs/heads/1.20.1' && '17' || '21' }}
           cache: 'gradle'
 
       - name: make gradle wrapper executable

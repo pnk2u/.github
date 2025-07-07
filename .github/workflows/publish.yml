@@ -73,18 +73,25 @@ jobs:
           retry-delay: 10000
           fail-mode: fail
 
-      - name: update CHANGELOG_history.md
+      - name: update CHANGELOG_history.md and README.md
         run: |
+          changelog_start_marker='<!-- changelog-history-start -->'
+          changelog_end_marker='<!-- changelog-history-end -->'
+      
+          if [[ -f CHANGELOG_history.md && -s CHANGELOG_history.md ]]; then
+            changelog_headline=$(sed -n '2p' CHANGELOG.md)
+            history_headline=$(head -n 1 CHANGELOG_history.md)
+            if [[ "$changelog_headline" == "$history_headline" ]]; then
+              echo "Changelog already in history. Skipping updates to CHANGELOG_history.md and README.md."
+              exit 0
+            fi
+          fi
+      
           if [[ ! -f CHANGELOG_history.md ]]; then
             touch CHANGELOG_history.md
           fi
           cat CHANGELOG.md CHANGELOG_history.md > temp && mv temp CHANGELOG_history.md
           sed -i '1d' CHANGELOG_history.md
-          
-      - name: update README.md with CHANGELOG_history.md
-        run: |
-          changelog_start_marker='<!-- changelog-history-start -->'
-          changelog_end_marker='<!-- changelog-history-end -->'
       
           if [[ ! -f README.md || ! -s README.md ]]; then
             echo "$changelog_start_marker" > README.md
@@ -97,6 +104,7 @@ jobs:
               if [[ "$start_line" -ge "$end_line" || "$start_line" -eq "$end_line" ]]; then
                 echo "The changelog-history markers are in incorrect order and/or in the same line in README.md"
                 exit 1
+              fi
               sed -i "$((start_line+1)),$((end_line-1))d" README.md
               sed -i "$((start_line))r CHANGELOG_history.md" README.md
             elif [[ -z "$start_line" && -z "$end_line" ]]; then

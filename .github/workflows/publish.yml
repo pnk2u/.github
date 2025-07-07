@@ -50,6 +50,11 @@ jobs:
           path: './gradle.properties'
           properties: 'archives_base_name mod_name_short mod_version minecraft_version_supported minecraft_version_name'
 
+      - name: escape parentheses in minecraft_version_name
+        run: |
+          escaped_version_name=$(echo "${{ steps.properties.outputs.minecraft_version_name }}" | sed 's/(/\\(/g; s/)/\\)/g')
+          echo "escaped_version_name=$escaped_version_name" >> $GITHUB_ENV
+
       - uses: Kir-Antipov/mc-publish@v3.3
         with:
           modrinth-featured: true
@@ -65,7 +70,7 @@ jobs:
           game-version-filter: releases
 
           version-type: release
-          files: 'build/libs/${{ steps.properties.outputs.archives_base_name }}-${{ steps.properties.outputs.mod_version }}+${{ steps.properties.outputs.minecraft_version_name }}-(Fabric|Quilt|Forge|NeoForge).jar'
+          files: "build/libs/${{ steps.properties.outputs.archives_base_name }}-${{ steps.properties.outputs.mod_version }}+${{ env.escaped_version_name }}-(Fabric|Quilt|Forge|NeoForge).jar"
 
           changelog-file: CHANGELOG.md
 

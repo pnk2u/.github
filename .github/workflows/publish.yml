@@ -48,7 +48,7 @@ jobs:
         uses: christian-draeger/read-properties@1.1.1
         with:
           path: './gradle.properties'
-          properties: 'archives_base_name mod_name mod_version minecraft_version_name'
+          properties: 'archives_base_name mod_name_short mod_version minecraft_version_supported minecraft_version_name'
 
       - uses: Kir-Antipov/mc-publish@v3.3
         with:
@@ -58,9 +58,10 @@ jobs:
 
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
 
-          name: '${{ steps.properties.outputs.mod_name }} ${{ steps.properties.outputs.mod_version }} + ${{ steps.properties.outputs.minecraft_version_name }}'
+          name: '${{ steps.properties.outputs.mod_name_short }} ${{ steps.properties.outputs.mod_version }} + ${{ steps.properties.outputs.minecraft_version_name }}'
           version: '${{ steps.properties.outputs.mod_version }}'
 
+          game-versions: '${{ steps.properties.outputs.minecraft_version_supported }}'
           game-version-filter: releases
 
           version-type: release
@@ -103,9 +104,10 @@ jobs:
               echo "$changelog_start_marker" >> README.md
               cat CHANGELOG_history.md >> README.md
               echo "$changelog_end_marker" >> README.md
-          else
-            echo "Incomplete changelog history markers found in README.md"
-            exit 1
+            else
+              echo "Incomplete changelog history markers found in README.md"
+              exit 1
+            fi
           fi
 
       - name: reset CHANGELOG.md

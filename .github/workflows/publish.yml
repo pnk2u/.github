@@ -1,7 +1,5 @@
 name: publish
 
-on: workflow_call
-
 on:
   workflow_call:
     secrets:

@@ -1,1 +1,1 @@
-${{\color{WildStrawberry}\Huge{\textsf{  pnku\ \}}}}\$
+<img src="https://www.pnku.de/res/img/favicon.ico">

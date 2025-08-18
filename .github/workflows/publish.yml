@@ -19,14 +19,17 @@ jobs:
 
       - name: check for publish flag
         run: |
-          if head -n 1 CHANGELOG.md | grep -q '<!--\s*publish\s*=\s*true\s*-->'; then
-              echo "Publish flag set to true. Starting publishing action."
+          if head -n 1 CHANGELOG.md | grep -q '<!--publish=true-->'; then
+              echo "Publish flag read: true. Starting publishing action."
+          elif head -n 1 CHANGELOG.md | grep -q '<!--\s*publish\s*=\s*true\s*-->'; then
+              echo "Publish flag read: true. Starting publishing action."
+              echo "Publish flag included spaces, inconsistencies prevent proper changelog grouping on Modrinth. Please use '<!--publish=true-->' instead."
           elif head -n 1 CHANGELOG.md | grep -q '<!--\s*publish\s*=\s*false\s*-->'; then
-              echo "Publish flag set to false. Stopping publishing action."
+              echo "Publish flag read: false. Stopping publishing action."
               exit 1
           else
               echo "Missing publish flag in line 1. Skipping publishing action and exiting with error."
-              echo "Please add '<!-- publish = true -->' or '<!-- publish = false -->' to the first line of CHANGELOG.md."
+              echo "Please add '<!--publish=true-->' or '<!--publish=false-->' to the first line of CHANGELOG.md."
               exit 1
           fi
         continue-on-error: false
@@ -80,8 +83,8 @@ jobs:
 
       - name: update CHANGELOG_history.md and README.md
         run: |
-          changelog_start_marker='<!-- changelog-history-start -->'
-          changelog_end_marker='<!-- changelog-history-end -->'
+          changelog_start_marker='<!--CHANGELOG:START-->'
+          changelog_end_marker='<!--CHANGELOG:END-->'
       
           if [[ -f CHANGELOG_history.md && -s CHANGELOG_history.md ]]; then
             changelog_headline=$(sed -n '2p' CHANGELOG.md)
@@ -113,7 +116,7 @@ jobs:
               sed -i "$((start_line+1)),$((end_line-1))d" README.md
               sed -i "$((start_line))r CHANGELOG_history.md" README.md
             elif [[ -z "$start_line" && -z "$end_line" ]]; then
-              echo "No changelog-history markers found in README.md. Appending changelog history with start and end markers at the bottom of the file."
+              echo "No CHANGELOG:START/END markers found in README.md. Appending changelog history with start and end markers at the bottom of the file."
               echo "$changelog_start_marker" >> README.md
               cat CHANGELOG_history.md >> README.md
               echo "$changelog_end_marker" >> README.md
@@ -125,7 +128,7 @@ jobs:
 
       - name: reset CHANGELOG.md
         run: |
-          echo '<!-- publish = false -->' > CHANGELOG.md
+          echo '<!--publish=false-->' > CHANGELOG.md
 
       - name: commit and push changelog updates
         run: |

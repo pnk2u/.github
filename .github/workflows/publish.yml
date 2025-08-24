@@ -98,9 +98,12 @@ jobs:
           if [[ ! -f CHANGELOG_history.md ]]; then
             touch CHANGELOG_history.md
           fi
+          if [[ $(tail -c1 CHANGELOG.md | wc -l) -eq 0 ]]; then
+            echo >> CHANGELOG.md
+          fi
           cat CHANGELOG.md CHANGELOG_history.md > temp && mv temp CHANGELOG_history.md
           sed -i '1d' CHANGELOG_history.md
-      
+        
           if [[ ! -f README.md || ! -s README.md ]]; then
             echo "$changelog_start_marker" > README.md
             cat CHANGELOG_history.md >> README.md
@@ -110,7 +113,7 @@ jobs:
             end_line=$(grep -n "$changelog_end_marker" README.md | cut -d: -f1)
             if [[ -n "$start_line" && -n "$end_line" ]]; then
               if [[ "$start_line" -ge "$end_line" || "$start_line" -eq "$end_line" ]]; then
-                echo "The changelog-history markers are in incorrect order and/or in the same line in README.md"
+                echo "The CHANGELOG:START/END markers are in incorrect order and/or in the same line in README.md"
                 exit 1
               fi
               sed -i "$((start_line+1)),$((end_line-1))d" README.md

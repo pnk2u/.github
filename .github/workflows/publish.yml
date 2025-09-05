@@ -107,6 +107,7 @@ jobs:
           if [[ ! -f README.md || ! -s README.md ]]; then
             echo "$changelog_start_marker" > README.md
             cat CHANGELOG_history.md >> README.md
+            echo "" >> README.md
             echo "$changelog_end_marker" >> README.md
           else
             start_line=$(grep -n "$changelog_start_marker" README.md | cut -d: -f1)
@@ -122,6 +123,7 @@ jobs:
               echo "No CHANGELOG:START/END markers found in README.md. Appending changelog history with start and end markers at the bottom of the file."
               echo "$changelog_start_marker" >> README.md
               cat CHANGELOG_history.md >> README.md
+              echo "" >> README.md
               echo "$changelog_end_marker" >> README.md
             else
               echo "Incomplete changelog history markers found in README.md"

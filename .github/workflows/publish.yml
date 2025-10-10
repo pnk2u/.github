@@ -133,7 +133,7 @@ jobs:
 
       - name: reset CHANGELOG.md
         run: |
-          echo '<!--publish=false-->' > CHANGELOG.md
+          printf '%s' '<!--publish=false-->' > CHANGELOG.md
 
       - name: commit and push changelog updates
         run: |

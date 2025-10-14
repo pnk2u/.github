@@ -142,5 +142,5 @@ jobs:
           git add CHANGELOG.md
           git add CHANGELOG_history.md
           git add README.md
-          git commit -m "Write to changelog history and reset changelog file"
+          git commit -m "Write to changelog history and reset changelog file (${{ steps.properties.outputs.mod_version }})"
           git push

@@ -32,8 +32,7 @@ jobs:
       
             sed -i '1d' CHANGELOG.md
             
-            printf '\n\n' >> CHANGELOG.md
-            printf '---\n' >> CHANGELOG.md
+            printf '\n\n---\n' >> CHANGELOG.md
             printf "> Looking for changes of previous versions?  \n" >> CHANGELOG.md
             printf "You can find them in the [changelog history](https://www.github.com/${GITHUB_REPOSITORY}#changelog-history)." >> CHANGELOG.md
       

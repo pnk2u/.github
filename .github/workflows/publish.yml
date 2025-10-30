@@ -99,11 +99,7 @@ jobs:
           changelog_start_marker='<!--CHANGELOG:START-->'
           changelog_end_marker='<!--CHANGELOG:END-->'
           
-          # The footer keeps the blank line and the '---' separator
-          cl_footer_l3_re='Looking for changes of previous versions\?\s+---\s*$'
-          cl_footer_l4_re='^>\s+You can find them in the \[changelog history\]\(https://www\.github\.com/.+/#changelog-history\)\.\s*$'
-          cl_footer_regex="($cl_footer_l3_re\n$cl_footer_l4_re)"
-          if tail -n 2 CHANGELOG.md | grep -qE "$cl_footer_regex"; then
+          if [[ $(wc -l < CHANGELOG.md) -ge 2 ]]; then
             sed -i -e '$d' -e '$d' CHANGELOG.md
           fi
           
@@ -123,7 +119,6 @@ jobs:
             echo >> CHANGELOG.md
           fi
           cat CHANGELOG.md CHANGELOG_history.md > temp && mv temp CHANGELOG_history.md
-          sed -i '1d' CHANGELOG_history.md
         
           if [[ ! -f README.md || ! -s README.md ]]; then
             echo "$changelog_start_marker" > README.md

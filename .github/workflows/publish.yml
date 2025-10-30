@@ -46,6 +46,11 @@ jobs:
             echo "Please add \`<!--publish=true-->\` or \`<!--publish=false-->\` to the first line of CHANGELOG.md."
             exit 1
           fi
+          
+          printf 'Successfully prepared CHANGELOG.md for publishing:'
+          printf '\n========================================\n'
+          cat CHANGELOG.md
+          printf '\n========================================\n'
         continue-on-error: false
 
       - name: set up JDK 21
@@ -116,6 +121,12 @@ jobs:
           if [[ $(tail -c1 CHANGELOG.md | wc -l) -eq 0 ]]; then
             echo >> CHANGELOG.md
           fi
+          
+          printf 'Writing changelog to CHANGELOG_history.md and README.md:'
+          printf '\n========================================\n'
+          cat CHANGELOG.md
+          printf '\n========================================\n'
+          
           cat CHANGELOG.md CHANGELOG_history.md > temp && mv temp CHANGELOG_history.md
         
           if [[ ! -f README.md || ! -s README.md ]]; then

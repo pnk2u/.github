@@ -98,7 +98,14 @@ jobs:
         run: |
           changelog_start_marker='<!--CHANGELOG:START-->'
           changelog_end_marker='<!--CHANGELOG:END-->'
-      
+          
+          # The footer keeps the blank line and the '---' separator
+          cl_footer_l3_re='Looking for changes of previous versions\?\s+---\s*$'
+          cl_footer_l4_re='^>\s+You can find them in the \[changelog history\]\(https://www\.github\.com/.+/#changelog-history\)\.\s*$'
+          cl_footer_regex="($cl_footer_l3_re\n$cl_footer_l4_re)"
+          if tail -n 2 CHANGELOG.md | grep -qE "$cl_footer_regex"; then
+            sed -i -e '$d' -e '$d' CHANGELOG.md
+          fi
           
           if [[ -f CHANGELOG_history.md && -s CHANGELOG_history.md ]]; then
             changelog_headline=$(sed -n '2p' CHANGELOG.md)
@@ -127,7 +134,7 @@ jobs:
             start_line=$(grep -n "$changelog_start_marker" README.md | cut -d: -f1)
             end_line=$(grep -n "$changelog_end_marker" README.md | cut -d: -f1)
             if [[ -n "$start_line" && -n "$end_line" ]]; then
-              if [[ "$start_line" -ge "$end_line" || "$start_line" -eq "$end_line" ]]; then
+              if [[ "$start_line" -ge "$end_line" ]]; then
                 echo "The CHANGELOG:START/END markers are in incorrect order and/or in the same line in README.md"
                 exit 1
               fi

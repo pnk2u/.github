@@ -99,9 +99,7 @@ jobs:
           changelog_start_marker='<!--CHANGELOG:START-->'
           changelog_end_marker='<!--CHANGELOG:END-->'
           
-          if [[ $(wc -l < CHANGELOG.md) -ge 2 ]]; then
-            sed -i -e '$d' -e '$d' CHANGELOG.md
-          fi
+          sed -i -e '$d' -e '$d' CHANGELOG.md
           
           if [[ -f CHANGELOG_history.md && -s CHANGELOG_history.md ]]; then
             changelog_headline=$(sed -n '2p' CHANGELOG.md)

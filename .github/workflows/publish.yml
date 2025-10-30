@@ -33,9 +33,9 @@ jobs:
             sed -i '1d' CHANGELOG.md
             
             printf '\n\n' >> CHANGELOG.md
-            echo '---' >> CHANGELOG.md
-            echo "> Looking for changes of previous versions?  " >> CHANGELOG.md
-            echo "You can find them in the [changelog history](https://www.github.com/${GITHUB_REPOSITORY}#changelog-history)." >> CHANGELOG.md
+            printf '---\n' >> CHANGELOG.md
+            printf "> Looking for changes of previous versions?  \n" >> CHANGELOG.md
+            printf "You can find them in the [changelog history](https://www.github.com/${GITHUB_REPOSITORY}#changelog-history)." >> CHANGELOG.md
       
           elif echo "$first_line" | grep -qE '<!--\s*publish\s*=\s*false\s*-->' ; then
             echo "Publish flag read: false. Stopping publishing action."

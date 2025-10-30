@@ -34,7 +34,7 @@ jobs:
             
             printf '\n\n---\n' >> CHANGELOG.md
             printf "> Looking for changes of previous versions?  \n" >> CHANGELOG.md
-            printf "You can find them in the [changelog history](https://www.github.com/${GITHUB_REPOSITORY}#changelog-history)." >> CHANGELOG.md
+            printf "You can find them in the [changelog history](https://www.github.com/${GITHUB_REPOSITORY}#changelog-history).\n" >> CHANGELOG.md
       
           elif echo "$first_line" | grep -qE '<!--\s*publish\s*=\s*false\s*-->' ; then
             echo "Publish flag read: false. Stopping publishing action."
@@ -103,7 +103,8 @@ jobs:
           changelog_start_marker='<!--CHANGELOG:START-->'
           changelog_end_marker='<!--CHANGELOG:END-->'
           
-          sed -i -e '$d' -e '$d' CHANGELOG.md
+          sed -i '$d' CHANGELOG.md
+          sed -i '$d' CHANGELOG.md
           
           if [[ -f CHANGELOG_history.md && -s CHANGELOG_history.md ]]; then
             changelog_headline=$(sed -n '2p' CHANGELOG.md)

@@ -19,14 +19,28 @@ jobs:
 
       - name: check for publish flag
         run: |
-          if head -n 1 CHANGELOG.md | grep -q '<!--publish=true-->'; then
-              echo "Publish flag read: true. Starting publishing action."
-          elif head -n 1 CHANGELOG.md | grep -q '<!--\s*publish\s*=\s*true\s*-->'; then
-              echo "Publish flag read: true. Starting publishing action."
-              echo "Publish flag included spaces, inconsistencies prevent proper changelog grouping on Modrinth. Please use '<!--publish=true-->' instead."
-          elif head -n 1 CHANGELOG.md | grep -q '<!--\s*publish\s*=\s*false\s*-->'; then
-              echo "Publish flag read: false. Stopping publishing action."
-              exit 1
+          set -e
+          if [[ ! -f CHANGELOG.md ]]; then
+            echo "Missing CHANGELOG.md"
+            exit 1
+          fi
+      
+          first_line=$(head -n 1 CHANGELOG.md || true)
+      
+          if echo "$first_line" | grep -qE '<!--\s*publish\s*=\s*true\s*-->' ; then
+            echo "Publish flag read: true. Starting publishing action."
+      
+            sed -i '1d' CHANGELOG.md
+            
+            echo "" >> CHANGELOG.md
+            echo '---' >> CHANGELOG.md
+            echo "> Looking for changes of previous versions?  " >> CHANGELOG.md
+            echo "You can find them in the [changelog history](https://www.github.com/${GITHUB_REPOSITORY}#changelog-history)." >> CHANGELOG.md
+      
+          elif echo "$first_line" | grep -qE '<!--\s*publish\s*=\s*false\s*-->' ; then
+            echo "Publish flag read: false. Stopping publishing action."
+            exit 1
+      
           else
             echo "Missing publish flag in line 1. Skipping publishing action and exiting with error."
             echo "Please add \`<!--publish=true-->\` or \`<!--publish=false-->\` to the first line of CHANGELOG.md."
@@ -85,6 +99,7 @@ jobs:
           changelog_start_marker='<!--CHANGELOG:START-->'
           changelog_end_marker='<!--CHANGELOG:END-->'
       
+          
           if [[ -f CHANGELOG_history.md && -s CHANGELOG_history.md ]]; then
             changelog_headline=$(sed -n '2p' CHANGELOG.md)
             history_headline=$(head -n 1 CHANGELOG_history.md)

@@ -32,7 +32,8 @@ jobs:
       
             sed -i '1d' CHANGELOG.md
             
-            printf '\n\n---\n' >> CHANGELOG.md
+            printf '\n\n---\n' >> CHANGELOG.md
+
             printf "> Looking for changes of previous versions?  \n" >> CHANGELOG.md
             printf "You can find them in the [changelog history](https://www.github.com/${GITHUB_REPOSITORY}#changelog-history).\n" >> CHANGELOG.md
       
@@ -63,19 +64,23 @@ jobs:
       - name: build files
         run: ./gradlew build
 
-      - name: read info
+      - name: read metadata from gradle.properties
         id: properties
         uses: christian-draeger/read-properties@1.1.1
         with:
           path: './gradle.properties'
           properties: 'archives_base_name mod_name_short mod_version minecraft_version_supported minecraft_version_name'
 
-      - name: escape parentheses in minecraft_version_name
+      - name: format version name and title
+        id: format_version_name
         run: |
           escaped_version_name=$(echo "${{ steps.properties.outputs.minecraft_version_name }}" | sed 's/(/\\(/g; s/)/\\)/g')
-          echo "escaped_version_name=$escaped_version_name" >> $GITHUB_ENV
+          echo "escaped_version_name=$escaped_version_name" >> "$GITHUB_OUTPUT"
+          mod_version_title="${{ steps.properties.outputs.mod_name_short }} ${{ steps.properties.outputs.mod_version }} + ${{ steps.properties.outputs.minecraft_version_name }}"
+          echo "mod_version_title=$mod_version_title" >> "$GITHUB_OUTPUT"
 
       - uses: Kir-Antipov/mc-publish@v3.3
+        id: publish
         with:
           modrinth-featured: true
           modrinth-unfeature-mode: intersection
@@ -83,20 +88,16 @@ jobs:
 
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
 
-          name: '${{ steps.properties.outputs.mod_name_short }} ${{ steps.properties.outputs.mod_version }} + ${{ steps.properties.outputs.minecraft_version_name }}'
+          name: '${{ steps.format_version_name.outputs.mod_version_title }}'
           version: '${{ steps.properties.outputs.mod_version }}'
 
           game-versions: '${{ steps.properties.outputs.minecraft_version_supported }}'
           game-version-filter: releases
 
           version-type: release
-          files: "build/libs/${{ steps.properties.outputs.archives_base_name }}-${{ steps.properties.outputs.mod_version }}+${{ env.escaped_version_name }}-(Fabric|Quilt|Forge|NeoForge).jar"
+          files: "build/libs/${{ steps.properties.outputs.archives_base_name }}-${{ steps.properties.outputs.mod_version }}+${{ steps.format_version_name.outputs.escaped_version_name }}-(Fabric|Quilt|Forge|NeoForge).jar"
 
           changelog-file: CHANGELOG.md
-
-          retry-attempts: 2
-          retry-delay: 10000
-          fail-mode: fail
 
       - name: update CHANGELOG_history.md and README.md
         run: |
@@ -121,6 +122,20 @@ jobs:
           if [[ $(tail -c1 CHANGELOG.md | wc -l) -eq 0 ]]; then
             echo >> CHANGELOG.md
           fi
+          
+          mod_version="${{ steps.properties.outputs.mod_version }}"
+          sed -i "1i<a name=\"$mod_version\"></a>" CHANGELOG.md
+          
+          mr_download_url="${{ steps.publish.outputs.modrinth-url }}"
+          cf_download_url="${{ steps.publish.outputs.curseforge-url }}"
+          mr_anchor_title="Download (Modrinth):&#10;${{ steps.format_version_name.outputs.mod_version_title }}"
+          cf_anchor_title="Download (Curseforge):&#10;${{ steps.format_version_name.outputs.mod_version_title }}"
+          mr_img_alt="Download on Modrinth: ${{ steps.format_version_name.outputs.mod_version_title }}"
+          cf_img_alt="Download on Curseforge: ${{ steps.format_version_name.outputs.mod_version_title }}"
+          formatted_download_line="<sub><p align=\"center\"><a title=\"$mr_anchor_title\" href=\"$mr_download_url\"><img alt=\"$mr_img_alt\" height=\"26\" width=\"26\" src=\"https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy-minimal/available/modrinth_vector.svg\"></a><sup>&thinsp;&#x20;&#x8ce;&nbsp;&#x200a;&#x200a;&#x200a;&#x200a;</sup><a title=\"$cf_anchor_title\" href=\"$cf_download_url\"><img alt=\"$cf_img_alt\" height=\"26\" width=\"26\" src=\"https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy-minimal/available/curseforge_vector.svg\"></a>&thinsp;&#x200a;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p></sub>"
+          spacer_line_number=$(( $(wc -l < CHANGELOG.md) - 1 ))
+          sed -i "${spacer_line_number}i\\
+          $formatted_download_line" CHANGELOG.md
           
           printf 'Writing changelog to CHANGELOG_history.md and README.md:'
           printf '\n========================================\n'

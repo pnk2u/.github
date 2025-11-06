@@ -188,7 +188,7 @@ jobs:
                   sed -i "$((start_line+1)),$((end_line-1))d" README.md
                   sed -i "$((start_line))r CHANGELOG.md" README.md
               fi
-              sed -i "$((start_line + $(wc -l < CHANGELOG.md)))a\\" README.md README.md
+              sed -i "$((start_line + $(wc -l < CHANGELOG.md)))a\\" README.md
               echo "Successfully updated changelog section in README.md."
             elif [[ -z "$start_line" && -z "$end_line" ]]; then
               echo "No CHANGELOG:START/END markers found in README.md. Unable to update changelog section."

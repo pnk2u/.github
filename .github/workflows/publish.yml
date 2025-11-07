@@ -106,9 +106,11 @@ jobs:
           changelog_start_marker='<!--CHANGELOG:START-->'
           changelog_end_marker='<!--CHANGELOG:END-->'
           
+          # Remove the last two lines (reference to changelog history from earlier step)
           sed -i '$d' CHANGELOG.md
           sed -i '$d' CHANGELOG.md
           
+          # Check if the current changelog is already in CHANGELOG_history.md
           known_changelog=false
           
           if [[ -f CHANGELOG_history.md && -s CHANGELOG_history.md ]]; then
@@ -121,18 +123,24 @@ jobs:
             fi
           fi
       
+          # Ensure CHANGELOG_history.md exists
           if [[ ! -f CHANGELOG_history.md ]]; then
             touch CHANGELOG_history.md
           fi
+          
+          # Ensure CHANGELOG.md ends with a newline
           if [[ $(tail -c1 CHANGELOG.md | wc -l) -eq 0 ]]; then
             echo >> CHANGELOG.md
           fi
           
           # Find separator_v and replace MR size with GH size
           sed -i 's/<!--SEPARATOR_V:MR--><img width=5 height=8/<!--SEPARATOR_V:GH--><img width=7 height=10/g' CHANGELOG.md
+          
+          # Add anchor link for the version at the top
           mod_version="${{ steps.properties.outputs.mod_version }}"
           sed -i "1i<a name=\"$mod_version\"></a>" CHANGELOG.md
           
+          # Add download badges line before the last separator
           mr_download_url="${{ steps.publish.outputs.modrinth-url }}"
           cf_download_url="${{ steps.publish.outputs.curseforge-url }}"
           formatted_download_footer="  \n<h2><sub><sub><sup><ins>Download ${{ steps.format_version_name.outputs.mod_version_number }}:</ins>&#x200A;  \n<a title=\"Download (Modrinth):&#10;${{ steps.format_version_name.outputs.mod_version_title }}\" href=\"$mr_download_url\"><img width=26 src=\"https://img.shields.io/badge/-%20-%23032a?style=flat&logo=modrinth\"></a>  \n<sup><img width=7 height=10 src=\"https://raw.githubusercontent.com/pnk2u/resources/main/ModProjects/shared/pres/icon/separator_v.svg\"></sup>  \n<a title=\"Download (Curseforge):&#10;${{ steps.format_version_name.outputs.mod_version_title }}\" href=\"$cf_download_url\"><img width=26 src=\"https://img.shields.io/badge/--%23302a?style=flat&logo=curseforge\"></a>  \n</sub></sub></h2>"
@@ -140,17 +148,21 @@ jobs:
           sed -i "${spacer_line_number}i\\
           $formatted_download_footer" CHANGELOG.md
           
+          # Output the current changelog being written to CHANGELOG_history.md
           printf 'Writing changelog to CHANGELOG_history.md:'
           printf '\n========================================\n'
           cat CHANGELOG.md
           printf '\n========================================\n'
           
+          # Append to CHANGELOG_history.md if not already present
           if [ "$known_changelog" = false ]; then
             cat CHANGELOG.md CHANGELOG_history.md > temp && mv temp CHANGELOG_history.md
           else
             echo "Skipping writing to CHANGELOG_history.md as this version is already recorded."
           fi
           
+          # Following modifications are for README.md
+          # Increase the level of the version headline and add footnote link
           second_line=$(sed -n '2p' CHANGELOG.md)
           if [[ "$second_line" == \#* ]]; then
               sed -i '2s/^#/##/' CHANGELOG.md
@@ -163,14 +175,17 @@ jobs:
               echo "Unexpected format in CHANGELOG.md: Line 2 does not end with :"
           fi
           
+          # Remove the last two lines (separator line and empty line)
           sed -i '$d' CHANGELOG.md
           sed -i '$d' CHANGELOG.md
           
+          # Output the current changelog being written to README.md
           printf 'Writing changelog to README.md:'
           printf '\n========================================\n'
           cat CHANGELOG.md
           printf '\n========================================\n'
           
+          # Insert/update changelog section in README.md
           if [[ ! -f README.md || ! -s README.md ]]; then
             echo "$changelog_start_marker" > README.md
             cat CHANGELOG.md >> README.md
@@ -207,10 +222,13 @@ jobs:
 
       - name: commit and push changelog updates
         run: |
+          # Configure git user
           git config --global user.name "pnk2u"
           git config --global user.email "159317511+pnk2u@users.noreply.github.com"
+          # Stage changed files
           git add CHANGELOG.md
           git add CHANGELOG_history.md
           git add README.md
+          # Commit and push changes
           git commit -m "Write to changelog history and reset changelog file (${{ steps.properties.outputs.mod_version }})"
           git push

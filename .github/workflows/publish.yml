@@ -143,10 +143,20 @@ jobs:
           # Add download badges line before the last separator
           mr_download_url="${{ steps.publish.outputs.modrinth-url }}"
           cf_download_url="${{ steps.publish.outputs.curseforge-url }}"
-          formatted_download_footer="  \n<h2><sub><sub><sup><ins>Download ${{ steps.format_version_name.outputs.mod_version_number }}:</ins>&#x200A;  \n<a title=\"Download (Modrinth):&#10;${{ steps.format_version_name.outputs.mod_version_title }}\" href=\"$mr_download_url\"><img width=26 src=\"https://img.shields.io/badge/-%20-%23032a?style=flat&logo=modrinth\"></a>  \n<sup><img width=7 height=10 src=\"https://raw.githubusercontent.com/pnk2u/resources/main/ModProjects/shared/pres/icon/separator_v.svg\"></sup>  \n<a title=\"Download (Curseforge):&#10;${{ steps.format_version_name.outputs.mod_version_title }}\" href=\"$cf_download_url\"><img width=26 src=\"https://img.shields.io/badge/--%23302a?style=flat&logo=curseforge\"></a>  \n</sub></sub></h2>"
           spacer_line_number=$(( $(wc -l < CHANGELOG.md) - 1 ))
-          sed -i "${spacer_line_number}i\\
-          $formatted_download_footer" CHANGELOG.md
+          
+          cat > /tmp/footer.txt <<EOF
+            <h2><sub><sub><sup><ins>Download ${{ steps.format_version_name.outputs.mod_version_number }}</ins>:</sup>&#x200A;
+            <a title="Download (Modrinth):&#10;${{ steps.format_version_name.outputs.mod_version_title }}" href="$mr_download_url">
+            <img width=26 src="https://img.shields.io/badge/-%20-%23032a?style=flat&logo=modrinth"></a>
+            <sup><img width=7 height=10 src="https://raw.githubusercontent.com/pnk2u/resources/main/ModProjects/shared/pres/icon/separator_v.svg"></sup>
+            <a title="Download (Curseforge):&#10;${{ steps.format_version_name.outputs.mod_version_title }}" href="$cf_download_url">
+            <img width=26 src="https://img.shields.io/badge/--%23302a?style=flat&logo=curseforge"></a>
+            </sub></sub></h2>
+          EOF
+          
+          sed -i "${spacer_line_number}r /tmp/footer.txt" CHANGELOG.md
+          rm /tmp/footer.txt
           
           # Output the current changelog being written to CHANGELOG_history.md
           printf 'Writing changelog to CHANGELOG_history.md:'

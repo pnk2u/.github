@@ -128,6 +128,8 @@ jobs:
             echo >> CHANGELOG.md
           fi
           
+          # Find separator_v and replace MR size with GH size
+          sed -i 's/<!--SEPARATOR_V:MR--><img width=5 height=8/<!--SEPARATOR_V:GH--><img width=7 height=10/g' CHANGELOG.md
           mod_version="${{ steps.properties.outputs.mod_version }}"
           sed -i "1i<a name=\"$mod_version\"></a>" CHANGELOG.md
           

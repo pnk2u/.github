@@ -9,6 +9,12 @@ on:
       CURSEFORGE_TOKEN:
         description: 'The token to use for Curseforge authentication'
         required: true
+    inputs:
+      default-branch:
+        type: string
+        description: 'The default branch to be referenced for changelog history links'
+        required: false
+        default: '1.21(.1)'
 
 jobs:
   build:
@@ -35,7 +41,7 @@ jobs:
             printf '\n\n---\n' >> CHANGELOG.md
 
             printf "> Looking for changes of previous versions?  \n" >> CHANGELOG.md
-            printf "You can find them in the [changelog history](https://www.github.com/${GITHUB_REPOSITORY}/blob/${GITHUB_REF_NAME}/CHANGELOG_history.md).\n" >> CHANGELOG.md
+            printf "You can find them in the [changelog history](https://www.github.com/${GITHUB_REPOSITORY}/blob/${{ inputs.default-branch }}/CHANGELOG_history.md).\n" >> CHANGELOG.md
       
           elif echo "$first_line" | grep -qE '<!--\s*publish\s*=\s*false\s*-->' ; then
             echo "Publish flag read: false. Stopping publishing action."

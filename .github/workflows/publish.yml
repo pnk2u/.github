@@ -193,10 +193,6 @@ jobs:
               echo "Unexpected format in CHANGELOG.md: Line 2 does not end with :"
           fi
           
-          # Remove the last two lines (separator line and empty line)
-          sed -i '$d' CHANGELOG.md
-          sed -i '$d' CHANGELOG.md
-          
           # Output the current changelog being written to README.md
           printf 'Writing changelog to README.md:'
           printf '\n========================================\n'

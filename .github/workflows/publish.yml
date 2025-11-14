@@ -148,7 +148,7 @@ jobs:
           sed -i "1i<a name=\"$mod_version\"></a>" CHANGELOG.md
           
           # Add download badges line before the last separator
-          mr_download_url="${{ steps.publish.outputs.modrinth-url }}"
+          mr_download_url="https://www.modrinth.com/mod/${{ steps.publish.outputs.modrinth-id }}/version/${{ steps.publish.outputs.modrinth-version }}"
           cf_download_url="${{ steps.publish.outputs.curseforge-url }}"
           spacer_line_number=$(( $(wc -l < CHANGELOG.md) - 1 ))
           

@@ -100,7 +100,7 @@ jobs:
           version: '${{ steps.properties.outputs.mod_version }}'
 
           game-versions: '${{ steps.properties.outputs.minecraft_version_supported }}'
-          game-version-filter: releases
+          game-version-filter: '${{ steps.properties.outputs.minecraft_version_filter }}'
 
           version-type: release
           files: "build/libs/${{ steps.properties.outputs.archives_base_name }}-${{ steps.properties.outputs.mod_version }}+${{ steps.format_version_name.outputs.escaped_version_name }}-(Fabric|Quilt|Forge|NeoForge).jar"

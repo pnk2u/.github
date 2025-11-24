@@ -75,7 +75,7 @@ jobs:
         uses: christian-draeger/read-properties@1.1.1
         with:
           path: './gradle.properties'
-          properties: 'archives_base_name mod_name_short mod_version minecraft_version_supported minecraft_version_name'
+          properties: 'archives_base_name mod_name_short mod_version minecraft_version_supported minecraft_version_filter minecraft_version_name'
 
       - name: format version name and title
         id: format_version_name

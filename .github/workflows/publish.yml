@@ -19,9 +19,13 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+        contents: write
     steps:
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: check for publish flag and prepare CHANGELOG.md
         run: |
@@ -112,7 +116,7 @@ jobs:
           changelog_start_marker='<!--CHANGELOG:START-->'
           changelog_end_marker='<!--CHANGELOG:END-->'
           
-          # Remove the last two lines (reference to changelog history from earlier step + horizontal rule)
+          # Remove the last three lines (reference to changelog history from earlier step + horizontal rule)
           sed -i '$d' CHANGELOG.md
           sed -i '$d' CHANGELOG.md
           sed -i '$d' CHANGELOG.md
@@ -174,7 +178,7 @@ jobs:
           
           # Append to CHANGELOG_history.md if not already present
           if [ "$known_changelog" = false ]; then
-            cat CHANGELOG.md CHANGELOG_history.md > temp && mv temp CHANGELOG_history.md
+            temp_file=$(mktemp) && cat CHANGELOG.md CHANGELOG_history.md > "$temp_file" && mv "$temp_file" CHANGELOG_history.md
           else
             echo "Skipping writing to CHANGELOG_history.md as this version is already recorded."
           fi

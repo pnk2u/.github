@@ -88,7 +88,7 @@ jobs:
           echo "escaped_version_name=$escaped_version_name" >> "$GITHUB_OUTPUT"
           mod_version_number="${{ steps.properties.outputs.mod_version }} + ${{ steps.properties.outputs.minecraft_version_name }}"
           mr_version_title="${{ steps.properties.outputs.mod_name_short }} $mod_version_number"
-          cf_version_title="$mod_version_number + ${{ steps.properties.outputs.mod_name_short }}"
+          cf_version_title="$mod_version_number - ${{ steps.properties.outputs.mod_name_short }}"
           file_path_glob="build/libs/${{ steps.properties.outputs.archives_base_name }}-${{ steps.properties.outputs.mod_version }}+$escaped_version_name-(Fabric|Quilt|Forge|NeoForge).jar"
           echo "mod_version_number=$mod_version_number" >> "$GITHUB_OUTPUT"
           echo "mr_version_title=$mr_version_title" >> "$GITHUB_OUTPUT"

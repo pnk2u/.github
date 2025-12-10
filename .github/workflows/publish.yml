@@ -87,27 +87,45 @@ jobs:
           escaped_version_name=$(echo "${{ steps.properties.outputs.minecraft_version_name }}" | sed 's/(/\\(/g; s/)/\\)/g')
           echo "escaped_version_name=$escaped_version_name" >> "$GITHUB_OUTPUT"
           mod_version_number="${{ steps.properties.outputs.mod_version }} + ${{ steps.properties.outputs.minecraft_version_name }}"
-          mod_version_title="${{ steps.properties.outputs.mod_name_short }} $mod_version_number"
+          mr_version_title="${{ steps.properties.outputs.mod_name_short }} $mod_version_number"
+          cf_version_title="$mod_version_number + ${{ steps.properties.outputs.mod_name_short }}"
+          file_path_glob="build/libs/${{ steps.properties.outputs.archives_base_name }}-${{ steps.properties.outputs.mod_version }}+$escaped_version_name-(Fabric|Quilt|Forge|NeoForge).jar"
           echo "mod_version_number=$mod_version_number" >> "$GITHUB_OUTPUT"
-          echo "mod_version_title=$mod_version_title" >> "$GITHUB_OUTPUT"
+          echo "mr_version_title=$mr_version_title" >> "$GITHUB_OUTPUT"
+          echo "cf_version_title=$cf_version_title" >> "$GITHUB_OUTPUT"
+          echo "file_path_glob=$file_path_glob" >> "$GITHUB_OUTPUT"
 
       - uses: Kir-Antipov/mc-publish@v3.3
-        id: publish
+        id: publish-mr
         with:
           modrinth-featured: true
           modrinth-unfeature-mode: intersection
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
 
-          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
-
-          name: '${{ steps.format_version_name.outputs.mod_version_title }}'
+          name: '${{ steps.format_version_name.outputs.mr_version_title }}'
           version: '${{ steps.properties.outputs.mod_version }}'
 
           game-versions: '${{ steps.properties.outputs.minecraft_version_supported }}'
           game-version-filter: '${{ steps.properties.outputs.minecraft_version_filter }}'
 
           version-type: release
-          files: "build/libs/${{ steps.properties.outputs.archives_base_name }}-${{ steps.properties.outputs.mod_version }}+${{ steps.format_version_name.outputs.escaped_version_name }}-(Fabric|Quilt|Forge|NeoForge).jar"
+          files: "${{ steps.format_version_name.outputs.file_path_glob }}"
+
+          changelog-file: CHANGELOG.md
+
+      - uses: Kir-Antipov/mc-publish@v3.3
+        id: publish-cf
+        with:
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+
+          name: '${{ steps.format_version_name.outputs.cf_version_title }}'
+          version: '${{ steps.properties.outputs.mod_version }}'
+
+          game-versions: '${{ steps.properties.outputs.minecraft_version_supported }}'
+          game-version-filter: '${{ steps.properties.outputs.minecraft_version_filter }}'
+
+          version-type: release
+          files: "${{ steps.format_version_name.outputs.file_path_glob }}"
 
           changelog-file: CHANGELOG.md
 
@@ -152,17 +170,17 @@ jobs:
           sed -i "1i<a name=\"$mod_version\"></a>" CHANGELOG.md
           
           # Add download badges line before the last separator
-          mr_download_url="https://www.modrinth.com/mod/${{ steps.publish.outputs.modrinth-id }}/version/${{ steps.publish.outputs.modrinth-version }}"
-          cf_download_url="${{ steps.publish.outputs.curseforge-url }}"
+          mr_download_url="https://www.modrinth.com/mod/${{ steps.publish-mr.outputs.modrinth-id }}/version/${{ steps.publish-mr.outputs.modrinth-version }}"
+          cf_download_url="${{ steps.publish-cf.outputs.curseforge-url }}"
           spacer_line_number=$(( $(wc -l < CHANGELOG.md) - 1 ))
           
           cat > /tmp/footer.txt <<-EOF
           
           <h2><sub><sub><sup><ins>Download ${{ steps.format_version_name.outputs.mod_version_number }}</ins>:</sup>&#x200A;
-          <a title="Download (Modrinth):&#10;${{ steps.format_version_name.outputs.mod_version_title }}" href="$mr_download_url">
+          <a title="Download (Modrinth):&#10;${{ steps.format_version_name.outputs.mr_version_title }}" href="$mr_download_url">
           <img width=26 src="https://img.shields.io/badge/-%20-%23032a?style=flat&logo=modrinth"></a>
           <sup><img width=7 height=10 src="https://raw.githubusercontent.com/pnk2u/resources/main/ModProjects/shared/pres/icon/separator_v.svg"></sup>
-          <a title="Download (Curseforge):&#10;${{ steps.format_version_name.outputs.mod_version_title }}" href="$cf_download_url">
+          <a title="Download (Curseforge):&#10;${{ steps.format_version_name.outputs.cf_version_title }}" href="$cf_download_url">
           <img width=26 src="https://img.shields.io/badge/--%23302a?style=flat&logo=curseforge"></a>
           </sub></sub></h2>
           EOF

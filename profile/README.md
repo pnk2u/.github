@@ -1,5 +1,5 @@
 <p align="center"><a href="https://www.pnku.de"><img src="https://assets.lieonstudios.dev/common/badges/icon/pnku-de.svg"></a><sup><sup><img width=18 src="https://raw.githubusercontent.com/pnk2u/resources/main/ModProjects/shared/pres/icon/separator_v.svg"></sup></sup><a href="https://modrinth.com/user/pnku"><img src="https://assets.lieonstudios.dev/common/badges/icon/social/modrinth.svg"></a><sup><sup><img width=18 src="https://raw.githubusercontent.com/pnk2u/resources/main/ModProjects/shared/pres/icon/separator_v.svg"></sup></sup><a href="https://curseforge.com/members/pnku"><img src="https://assets.lieonstudios.dev/common/badges/icon/social/curseforge.svg"></a></p>  
 
-I create Minecraft mods focused on expanding the game's ideas, mostly in terms of more variety to existing things.   
+I create Minecraft mods focused on expanding the game's ideas, mostly in terms of adding more variety to existing features.   
 **[pnku.de](https://www.pnku.de)**: An overview of those and related mods with always up-to-date download links.   
 You can also find my work on [Modrinth](https://modrinth.com/user/pnku) and [Curseforge](https://curseforge.com/members/pnku).

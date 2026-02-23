@@ -79,7 +79,7 @@ jobs:
         uses: christian-draeger/read-properties@1.1.1
         with:
           path: './gradle.properties'
-          properties: 'archives_base_name mod_name_short mod_version minecraft_version_supported minecraft_version_filter minecraft_version_name modrinth_id curseforge_id'
+          properties: 'archives_base_name mod_name_short mod_version minecraft_version_supported minecraft_version_filter minecraft_version_name'
 
       - name: format version name and title
         id: format_version_name
@@ -98,7 +98,6 @@ jobs:
       - uses: Kir-Antipov/mc-publish@v3.3
         id: publish-mr
         with:
-          modrinth-id: ${{ steps.properties.outputs.modrinth_id }}
           modrinth-featured: true
           modrinth-unfeature-mode: intersection
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
@@ -117,7 +116,6 @@ jobs:
       - uses: Kir-Antipov/mc-publish@v3.3
         id: publish-cf
         with:
-          curseforge-id: ${{ steps.properties.outputs.curseforge_id }}
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
 
           name: '${{ steps.format_version_name.outputs.cf_version_title }}'

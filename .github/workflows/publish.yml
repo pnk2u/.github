@@ -57,9 +57,13 @@ jobs:
             exit 1
           fi
           
-          printf 'Successfully prepared CHANGELOG.md for publishing:'
+          perl -pe 's|<ins>([^<]+)</ins>\s*\(([^)]*)\)|my $t=$1; my $p=$2; my @u=$p=~/href="([^"]+)"/g; my $u=$u[-1]; defined $u ? "<ins>[$t]($u)</ins>" : "<ins>$t</ins>"|ge' CHANGELOG.md > CHANGELOG_cf.md
+          
+          printf 'Successfully prepared CHANGELOG.md and CHANGELOG_cf.md for publishing:'
           printf '\n========================================\n'
           cat CHANGELOG.md
+          printf '\n========================================\n'
+          cat CHANGELOG_cf.md
           printf '\n========================================\n'
         continue-on-error: false
 
@@ -127,7 +131,7 @@ jobs:
           version-type: release
           files: "${{ steps.format_version_name.outputs.file_path_glob }}"
 
-          changelog-file: CHANGELOG.md
+          changelog-file: CHANGELOG_cf.md
 
       - name: update CHANGELOG_history.md and README.md
         run: |

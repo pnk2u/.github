@@ -27,10 +27,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
       - uses: ./.github/actions/prepare-changelog
         with:
           default-branch: ${{ inputs.default-branch }}

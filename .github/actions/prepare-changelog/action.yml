@@ -1,0 +1,54 @@
+name: Prepare Changelog
+description: 'Check for publish flag and prepare CHANGELOG.md for publishing'
+
+inputs:
+  default-branch:
+    description: 'The default branch to be referenced for changelog history links'
+    required: false
+    default: '1.21(.1)'
+
+runs:
+  using: composite
+  steps:
+    - name: check for publish flag and prepare CHANGELOG.md
+      shell: bash
+      run: |
+        set -e
+        if [[ ! -f CHANGELOG.md ]]; then
+          echo "Missing CHANGELOG.md"
+          exit 1
+        fi
+    
+        first_line=$(head -n 1 CHANGELOG.md || true)
+    
+        if echo "$first_line" | grep -qE '<!--\s*publish\s*=\s*true\s*-->' ; then
+          echo "Publish flag read: true. Starting publishing action."
+    
+          sed -i '1d' CHANGELOG.md
+          
+          printf '\n\n---\n' >> CHANGELOG.md
+
+          printf "> Looking for changes of previous versions?  \n" >> CHANGELOG.md
+          printf "You can find them in the [changelog history](https://www.github.com/${GITHUB_REPOSITORY}/blob/${{ inputs.default-branch }}/CHANGELOG_history.md).\n" >> CHANGELOG.md
+    
+        elif echo "$first_line" | grep -qE '<!--\s*publish\s*=\s*false\s*-->' ; then
+          echo "Publish flag read: false. Stopping publishing action."
+          exit 1
+    
+        else
+          echo "Missing publish flag in line 1. Skipping publishing action and exiting with error."
+          echo "Please add \`<!--publish=true-->\` or \`<!--publish=false-->\` to the first line of CHANGELOG.md."
+          exit 1
+        fi
+        
+        perl -pe 's|<ins>([^<]+)</ins>\s*\(([^)]*)\)|my $t=$1; my $p=$2; my @u=$p=~/href="([^"]+)"/g; my $u=$u[-1]; defined $u ? "<ins>[$t]($u)</ins>" : "<ins>$t</ins>"|ge' CHANGELOG.md > CHANGELOG_cf.md
+        
+        sed -i 's/<sub>\(.*\)<\/sub>/<sup>\1<\/sup>/g' CHANGELOG_cf.md
+        
+        printf 'Successfully prepared CHANGELOG.md and CHANGELOG_cf.md for publishing:'
+        printf '\n========================================\n'
+        cat CHANGELOG.md
+        printf '\n========================================\n'
+        cat CHANGELOG_cf.md
+        printf '\n========================================\n'
+

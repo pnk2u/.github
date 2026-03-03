@@ -27,7 +27,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: ./.github/actions/prepare-changelog
+      - uses: pnk2u/.github/.github/actions/prepare-changelog@main
         with:
           default-branch: ${{ inputs.default-branch }}
 
@@ -97,7 +97,7 @@ jobs:
 
           changelog-file: CHANGELOG_cf.md
 
-      - uses: ./.github/actions/publish-changelog
+      - uses: pnk2u/.github/.github/actions/publish-changelog@main
         with:
           version: ${{ steps.properties.outputs.mod_version }}
           modrinth-id: ${{ steps.publish-mr.outputs.modrinth-id }}

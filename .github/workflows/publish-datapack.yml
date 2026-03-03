@@ -98,9 +98,6 @@ jobs:
 
           loaders: |
             datapack
-            fabric
-            neoforge
-            quilt
 
           dependencies: '${{ steps.properties.outputs.dependencies }}'
 

@@ -24,155 +24,165 @@ inputs:
     description: "CurseForge version title"
     required: true
 
-  runs:
-    using: composite
-    steps:
-      - name: update CHANGELOG_history.md and README.md
-        shell: bash
-        run: |
-          set -e
-  
-          changelog_start_marker='<!--CHANGELOG:START-->'
-          changelog_end_marker='<!--CHANGELOG:END-->'
-  
-          # Remove the last three lines (reference to changelog history from earlier step + horizontal rule)
-          tac CHANGELOG.md | tail -n +3 | tac > CHANGELOG.md.tmp && mv CHANGELOG.md.tmp CHANGELOG.md
-          
-          # Check if the current changelog is already in CHANGELOG_history.md
-          known_changelog=false
-  
-          if [[ -f CHANGELOG_history.md && -s CHANGELOG_history.md ]]; then
+runs:
+  using: composite
+  steps:
+    - name: update CHANGELOG_history.md and README.md
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+        MODRINTH_ID: ${{ inputs.modrinth-id }}
+        MODRINTH_VERSION: ${{ inputs.modrinth-version }}
+        CURSEFORGE_URL: ${{ inputs.curseforge-url }}
+        VERSION_NUMBER: ${{ inputs.version-number }}
+        MR_VERSION_TITLE: ${{ inputs.mr-version-title }}
+        CF_VERSION_TITLE: ${{ inputs.cf-version-title }}
+      run: |
+        set -e
+
+        changelog_start_marker='<!--CHANGELOG:START-->'
+        changelog_end_marker='<!--CHANGELOG:END-->'
+
+        # Remove the last three lines (reference to changelog history from earlier step + horizontal rule)
+        tac CHANGELOG.md | tail -n +4 | tac > CHANGELOG.md.tmp && mv CHANGELOG.md.tmp CHANGELOG.md
+        
+        # Check if the current changelog is already in CHANGELOG_history.md
+        known_changelog=false
+
+        if [[ -f CHANGELOG_history.md && -s CHANGELOG_history.md ]]; then
           changelog_headline=$(sed -n '1p' CHANGELOG.md)
           history_headline_1=$(sed -n '1p' CHANGELOG_history.md)
           history_headline_2=$(sed -n '2p' CHANGELOG_history.md)
           if [[ "$changelog_headline" == "$history_headline_1" || "$changelog_headline" == "$history_headline_2" ]]; then
-          echo "Changelog already in history. Skipping updates to CHANGELOG_history.md."
-          known_changelog=true
+            echo "Changelog already in history. Skipping updates to CHANGELOG_history.md."
+            known_changelog=true
           fi
-          fi
-  
-          # Ensure CHANGELOG_history.md exists
-          if [[ ! -f CHANGELOG_history.md ]]; then
+        fi
+
+        # Ensure CHANGELOG_history.md exists
+        if [[ ! -f CHANGELOG_history.md ]]; then
           touch CHANGELOG_history.md
-          fi
-  
-          # Ensure CHANGELOG.md ends with a newline
-          if [[ $(tail -c1 CHANGELOG.md | wc -l) -eq 0 ]]; then
+        fi
+
+        # Ensure CHANGELOG.md ends with a newline
+        if [[ $(tail -c1 CHANGELOG.md | wc -l) -eq 0 ]]; then
           echo >> CHANGELOG.md
-          fi
-  
+        fi
+
           # Find separator_v and replace MR size with GH size
           sed -i 's/<!--SEPARATOR_V:MR--><img width=5 height=8/<!--SEPARATOR_V:GH--><img width=7 height=10/g' CHANGELOG.md
   
           # Add anchor link for the version at the top
-          sed -i "1i<a name=\"${{ inputs.version }}\"></a>" CHANGELOG.md
+          sed -i "1i<a name=\"$VERSION\"></a>" CHANGELOG.md
   
           # Add download badges line before the last separator
-          mr_download_url="https://www.modrinth.com/mod/${{ inputs.modrinth-id }}/version/${{ inputs.modrinth-version }}"
-          cf_download_url="${{ inputs.curseforge-url }}"
+          mr_download_url="https://www.modrinth.com/mod/$MODRINTH_ID/version/$MODRINTH_VERSION"
+          cf_download_url="$CURSEFORGE_URL"
           spacer_line_number=$(( $(wc -l < CHANGELOG.md) - 1 ))
   
           cat > /tmp/footer.txt <<-EOF
   
-          <h2><sub><sub><sup><ins>Download ${{ inputs.version-number }}</ins>:</sup>&#x200A;
-          <a title="Download (Modrinth):&#10;${{ inputs.mr-version-title }}" href="$mr_download_url">
+          <h2><sub><sub><sup><ins>Download $VERSION_NUMBER</ins>:</sup>&#x200A;
+          <a title="Download (Modrinth):&#10;$MR_VERSION_TITLE" href="$mr_download_url">
           <img width=26 src="https://img.shields.io/badge/-%20-%23032a?style=flat&logo=modrinth"></a>
           <sup><img width=7 height=10 src="https://raw.githubusercontent.com/pnk2u/resources/main/ModProjects/shared/pres/icon/separator_v.svg"></sup>
-          <a title="Download (Curseforge):&#10;${{ inputs.cf-version-title }}" href="$cf_download_url">
+          <a title="Download (Curseforge):&#10;$CF_VERSION_TITLE" href="$cf_download_url">
           <img width=26 src="https://img.shields.io/badge/--%23302a?style=flat&logo=curseforge"></a>
           </sub></sub></h2>
           EOF
   
           sed -i "${spacer_line_number}r /tmp/footer.txt" CHANGELOG.md
           rm /tmp/footer.txt
-  
-          # Output the current changelog being written to CHANGELOG_history.md
-          printf 'Writing changelog to CHANGELOG_history.md:'
-          printf '\n========================================\n'
-          cat CHANGELOG.md
-          printf '\n========================================\n'
-  
-          # Append to CHANGELOG_history.md if not already present
-          if [ "$known_changelog" = false ]; then
+
+        # Output the current changelog being written to CHANGELOG_history.md
+        printf 'Writing changelog to CHANGELOG_history.md:'
+        printf '\n========================================\n'
+        cat CHANGELOG.md
+        printf '\n========================================\n'
+
+        # Append to CHANGELOG_history.md if not already present
+        if [ "$known_changelog" = false ]; then
           temp_file=$(mktemp) && cat CHANGELOG.md CHANGELOG_history.md > "$temp_file" && mv "$temp_file" CHANGELOG_history.md
-          else
+        else
           echo "Skipping writing to CHANGELOG_history.md as this version is already recorded."
-          fi
-  
-          # Following modifications are for README.md
-          # Increase the level of the version headline and add footnote link
-          second_line=$(sed -n '2p' CHANGELOG.md)
-          if [[ "$second_line" == \#* ]]; then
+        fi
+
+        # Following modifications are for README.md
+        # Increase the level of the version headline and add footnote link
+        second_line=$(sed -n '2p' CHANGELOG.md)
+        if [[ "$second_line" == \#* ]]; then
           sed -i '2s/^#/##/' CHANGELOG.md
-          else
+        else
           echo "Unexpected format in CHANGELOG.md: Line 2 does not start with #"
-          fi
-          if [[ "$second_line" == *: ]]; then
-                                       sed -i '2s/:/[*](#footnote-*):/' CHANGELOG.md
-          else
+        fi
+        if [[ "$second_line" == *: ]]; then
+          sed -i '2s/:/[*](#footnote-*):/' CHANGELOG.md
+        else
           echo "Unexpected format in CHANGELOG.md: Line 2 does not end with :"
-          fi
-  
-          # Output the current changelog being written to README.md
-          printf 'Writing changelog to README.md:'
-          printf '\n========================================\n'
-          cat CHANGELOG.md
-          printf '\n========================================\n'
-  
-          # Insert/update changelog section in README.md
-          if [[ ! -f README.md || ! -s README.md ]]; then
+        fi
+
+        # Output the current changelog being written to README.md
+        printf 'Writing changelog to README.md:'
+        printf '\n========================================\n'
+        cat CHANGELOG.md
+        printf '\n========================================\n'
+
+        # Insert/update changelog section in README.md
+        if [[ ! -f README.md || ! -s README.md ]]; then
           echo "$changelog_start_marker" > README.md
           cat CHANGELOG.md >> README.md
           echo "" >> README.md
           echo "$changelog_end_marker" >> README.md
-          else
+        else
           start_line=$(grep -n "$changelog_start_marker" README.md | cut -d: -f1)
           end_line=$(grep -n "$changelog_end_marker" README.md | cut -d: -f1)
           if [[ -n "$start_line" && -n "$end_line" ]]; then
-          if [[ "$start_line" -ge "$end_line" ]]; then
-          echo "The CHANGELOG:START/END markers are in incorrect order and/or in the same line in README.md"
-          exit 1
-          fi
-          if [[ $((end_line - start_line)) -le 1 ]]; then
-          sed -i "$((start_line))r CHANGELOG.md" README.md
-          else
-          sed -i "$((start_line+1)),$((end_line-1))d" README.md
-          sed -i "$((start_line))r CHANGELOG.md" README.md
-          fi
-          sed -i "$((start_line + $(wc -l < CHANGELOG.md)))a\\" README.md
-          echo "Successfully updated changelog section in README.md."
+            if [[ "$start_line" -ge "$end_line" ]]; then
+              echo "The CHANGELOG:START/END markers are in incorrect order and/or in the same line in README.md"
+              exit 1
+            fi
+            if [[ $((end_line - start_line)) -le 1 ]]; then
+              sed -i "$((start_line))r CHANGELOG.md" README.md
+            else
+              sed -i "$((start_line+1)),$((end_line-1))d" README.md
+              sed -i "$((start_line))r CHANGELOG.md" README.md
+            fi
+            sed -i "$((start_line + $(wc -l < CHANGELOG.md)))a\\" README.md
+            echo "Successfully updated changelog section in README.md."
           elif [[ -z "$start_line" && -z "$end_line" ]]; then
-          echo "No CHANGELOG:START/END markers found in README.md. Unable to update changelog section."
-          exit 1
+            echo "No CHANGELOG:START/END markers found in README.md. Unable to update changelog section."
+            exit 1
           else
-          echo "Incomplete changelog markers found in README.md. Both START and END markers are required."
-          exit 1
+            echo "Incomplete changelog markers found in README.md. Both START and END markers are required."
+            exit 1
           fi
-          fi
+        fi
 
-      - name: reset CHANGELOG.md
-        shell: bash
-        run: |
-          set -e
-          printf '%s' '<!--publish=false-->' > CHANGELOG.md
+    - name: reset CHANGELOG.md
+      shell: bash
+      run: |
+        set -e
+        printf '%s' '<!--publish=false-->' > CHANGELOG.md
 
-      - name: commit and push changelog updates
-        shell: bash
-        run: |
-          set -e
-          
-          # Configure git user
-          git config --global user.name "pnk2u"
-          git config --global user.email "159317511+pnk2u@users.noreply.github.com"
-          
-          # Stage changed files
-          git add CHANGELOG.md
-          git add CHANGELOG_history.md
-          git add README.md
-          
-          # Commit and push changes (avoid failing the whole job if there's nothing to commit)
-          git commit -m "Write to changelog history and reset changelog file (${{ inputs.version }})" || {
-            echo "No changes to commit."
-            exit 0
-          }
-          git push
+    - name: commit and push changelog updates
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+      run: |
+        set -e
+        
+        # Configure git user
+        git config --global user.name "pnk2u"
+        git config --global user.email "159317511+pnk2u@users.noreply.github.com"
+        
+        # Stage changed files
+        git add CHANGELOG.md
+        git add CHANGELOG_history.md
+        git add README.md
+        
+        # Commit and push changes (avoid failing the whole job if there's nothing to commit)
+        git commit -m "Write to changelog history and reset changelog file ($VERSION)" || {
+          echo "No changes to commit."
+          exit 0
+        }
+        git push

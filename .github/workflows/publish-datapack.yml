@@ -91,7 +91,7 @@ jobs:
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
 
           name: '${{ steps.format_version_name.outputs.mr_version_title }}'
-          version: '${{ steps.properties.outputs.mod_version }}'
+          version: '${{ steps.properties.outputs.pack_version }}'
 
           game-versions: '${{ steps.properties.outputs.minecraft_version_supported }}'
           game-version-filter: '${{ steps.properties.outputs.minecraft_version_filter }}'
@@ -116,7 +116,7 @@ jobs:
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
 
           name: '${{ steps.format_version_name.outputs.cf_version_title }}'
-          version: '${{ steps.properties.outputs.mod_version }}'
+          version: '${{ steps.properties.outputs.pack_version }}'
 
           game-versions: '${{ steps.properties.outputs.minecraft_version_supported }}'
           game-version-filter: '${{ steps.properties.outputs.minecraft_version_filter }}'

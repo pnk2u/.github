@@ -57,29 +57,40 @@ jobs:
         uses: christian-draeger/read-properties@1.1.1
         with:
           path: './pack.properties'
-          properties: 'archives_base_name pack_name pack_version minecraft_version_supported minecraft_version_filter minecraft_version_name modrinth_id curseforge_id dependencies'
+          properties: 'archives_base_name pack_name pack_version pack_description minecraft_version_supported minecraft_version_filter minecraft_version_name modrinth_id curseforge_id dependencies license'
+
+      - name: set pack.mcmeta pack_description from pack.properties
+        run: |
+          description="${{ steps.properties.outputs.pack_description }}"
+          sed -i "s/%pack_description%/\"$description\"/g" pack.mcmeta
 
       - name: format version name and title
         id: format_version_name
         run: |
           archives_base_name="${{ steps.properties.outputs.archives_base_name }}"
+          universal_mod_id=$(echo "$archives_base_name" | tr '[:upper:]' '[:lower:]' | tr '-' '_')
           escaped_version_name=$(echo "${{ steps.properties.outputs.minecraft_version_name }}" | sed 's/(/\\(/g; s/)/\\)/g')
           echo "escaped_version_name=$escaped_version_name" >> "$GITHUB_OUTPUT"
           pack_version_number="${{ steps.properties.outputs.pack_version }} + ${{ steps.properties.outputs.minecraft_version_name }}"
           mr_version_title="${{ steps.properties.outputs.pack_name }} $pack_version_number"
           cf_version_title="$pack_version_number - ${{ steps.properties.outputs.pack_name }}"
-          file_path_glob="out/${{ steps.properties.outputs.archives_base_name }}-${{ steps.properties.outputs.mod_version }}+$escaped_version_name.zip"
+          file_name="${{ steps.properties.outputs.archives_base_name }}-${{ steps.properties.outputs.pack_version }}+${{ steps.properties.outputs.minecraft_version_name }}"
+          zip_file_path="out/$file_name.zip"
+          jar_file_path="out/$file_name.jar"
           echo "archives_base_name=$archives_base_name" >> "$GITHUB_OUTPUT"
           echo "pack_version_number=$pack_version_number" >> "$GITHUB_OUTPUT"
           echo "mr_version_title=$mr_version_title" >> "$GITHUB_OUTPUT"
           echo "cf_version_title=$cf_version_title" >> "$GITHUB_OUTPUT"
-          echo "file_path_glob=$file_path_glob" >> "$GITHUB_OUTPUT"
+          echo "file_name=$file_name" >> "$GITHUB_OUTPUT"
+          echo "zip_file_path=$zip_file_path" >> "$GITHUB_OUTPUT"
+          echo "jar_file_path=$jar_file_path" >> "$GITHUB_OUTPUT"
+          echo "universal_mod_id=$universal_mod_id" >> "$GITHUB_OUTPUT"
 
       - name: build datapack zip
         run: |
           set -e
           mkdir -p out
-          zip -r "out/${{ steps.properties.outputs.archives_base_name }}-${{ steps.properties.outputs.mod_version }}+${{ steps.properties.outputs.minecraft_version_name }}.zip" data pack.mcmeta pack.png
+          zip -r "${{ steps.format_version_name.outputs.zip_file_path }}" data pack.mcmeta pack.png
         continue-on-error: false
 
       - uses: Kir-Antipov/mc-publish@v3.3
@@ -102,7 +113,7 @@ jobs:
           dependencies: '${{ steps.properties.outputs.dependencies }}'
 
           version-type: release
-          files: "${{ steps.format_version_name.outputs.file_path_glob }}"
+          files: "${{ steps.format_version_name.outputs.zip_file_path }}"
 
           changelog-file: CHANGELOG.md
 
@@ -124,7 +135,7 @@ jobs:
           dependencies: '${{ steps.properties.outputs.dependencies }}'
 
           version-type: release
-          files: "${{ steps.format_version_name.outputs.file_path_glob }}"
+          files: "${{ steps.format_version_name.outputs.zip_file_path }}"
 
           changelog-file: CHANGELOG_cf.md
           retry-delay: 2000
@@ -134,10 +145,113 @@ jobs:
 
       - uses: pnk2u/.github/.github/actions/publish-changelog@main
         with:
-          version: ${{ steps.properties.outputs.mod_version }}
+          version: ${{ steps.properties.outputs.pack_version }}
           modrinth-id: ${{ steps.publish-mr.outputs.modrinth-id }}
           modrinth-version: ${{ steps.publish-mr.outputs.modrinth-version }}
           curseforge-url: ${{ steps.publish-cf.outputs.curseforge-url }}
           version-number: ${{ steps.format_version_name.outputs.pack_version_number }}
           mr-version-title: ${{ steps.format_version_name.outputs.mr_version_title }}
           cf-version-title: ${{ steps.format_version_name.outputs.cf_version_title }}
+
+      - name: generate jar metadata (Fabric/NeoForge/Quilt)
+        run: |
+          # fabric.mod.json
+          cat > ./fabric.mod.json <<EOL
+          {
+            "schemaVersion": 1,
+            "id": "${{ steps.format_version_name.outputs.universal_mod_id }}",
+            "version": "${{ steps.properties.outputs.pack_version }}",
+            "name": "${{ steps.properties.outputs.pack_name }}",
+            "description": "${{ steps.properties.outputs.pack_description }}",
+            "authors": ["pnku"],
+            "contact": {
+              "homepage": "https://modrinth.com/datapack/${{ steps.properties.outputs.modrinth_id }}",
+              "sources": "https://github.com/${GITHUB_REPOSITORY}",
+              "issues": "https://github.com/${GITHUB_REPOSITORY}/issues"
+            },
+            "license": "${{ steps.properties.outputs.license }}",
+            "icon": "pack.png",
+            "environment": "*",
+            "depends": {
+              "fabric-resource-loader-v0": "*"
+            }
+          }
+          EOL
+          
+          # META-INF/neoforge.mods.toml
+          mkdir -p META-INF
+          cat > ./META-INF/neoforge.mods.toml <<EOL
+          
+          modLoader = 'javafml'
+          loaderVersion = '[1,)'
+          license = '${{ steps.properties.outputs.license }}'
+          showAsResourcePack = false
+          mods = [
+          	{ modId = '${{ steps.format_version_name.outputs.universal_mod_id }}', version = '${{ steps.properties.outputs.pack_version }}', displayName = '${{ steps.properties.outputs.pack_name }}', description = "${{ steps.properties.outputs.pack_description }}", logoFile = 'pack.png', updateJSONURL = 'https://api.modrinth.com/updates/${{ steps.properties.outputs.modrinth_id }}/forge_updates.json?neoforge=only', authors = 'pnku', displayURL = 'https://modrinth.com/datapack/${{ steps.properties.outputs.modrinth_id }}' }
+          ]
+          issueTrackerURL = 'https://github.com/${GITHUB_REPOSITORY}/issues'
+          EOL
+
+          # quilt.mod.json
+          cat > ./quilt.mod.json <<EOL
+          {
+            "schema_version": 1,
+            "quilt_loader": {
+              "group": "de.pnku",
+              "id": "${{ steps.format_version_name.outputs.universal_mod_id }}",
+              "version": "${{ steps.properties.outputs.pack_version }}",
+              "metadata": {
+                "name": "${{ steps.properties.outputs.pack_name }}",
+                "description": "${{ steps.properties.outputs.pack_description }}",
+                "contributors": {
+                  "pnku": "Author"
+                },
+                "contact": {
+                  "homepage": "https://modrinth.com/datapack/${{ steps.properties.outputs.modrinth_id }}",
+                  "sources": "https://github.com/${GITHUB_REPOSITORY}",
+                  "issues": "https://github.com/${GITHUB_REPOSITORY}/issues"
+                },
+                "icon": "pack.png"
+              },
+              "intermediate_mappings": "net.fabricmc:intermediary",
+              "depends": [
+                {
+                  "id": "quilt_resource_loader",
+                  "versions": "*",
+                  "unless": "fabric-resource-loader-v0"
+                }
+              ]
+            }
+          }
+          EOL
+
+      - name: build datapack jar
+        run: |
+          set -e
+          mkdir -p out
+          zip -r "${{ steps.format_version_name.outputs.jar_file_path }}" data pack.mcmeta pack.png fabric.mod.json META-INF/neoforge.mods.toml quilt.mod.json
+        continue-on-error: false
+
+      - name: upload jar to Modrinth
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: '${{ steps.properties.outputs.modrinth_id }}'
+          modrinth-featured: true
+          modrinth-unfeature-mode: intersection
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+
+          name: '${{ steps.format_version_name.outputs.mr_version_title }} (Mod)'
+          version: '${{ steps.properties.outputs.pack_version }}+mod'
+
+          game-versions: '${{ steps.properties.outputs.minecraft_version_supported }}'
+          game-version-filter: '${{ steps.properties.outputs.minecraft_version_filter }}'
+
+          loaders: |
+              fabric
+              neoforge
+              quilt
+
+          dependencies: '${{ steps.properties.outputs.dependencies }}'
+          version-type: release
+          files: '${{ steps.format_version_name.outputs.jar_file_path }}'
+          changelog-file: CHANGELOG.md

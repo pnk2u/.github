@@ -62,7 +62,7 @@ jobs:
       - name: set pack.mcmeta pack_description from pack.properties
         run: |
           description="${{ steps.properties.outputs.pack_description }}"
-          sed -i "s/%pack_description%/\"$description\"/g" pack.mcmeta
+          sed -i "s/%pack_description%/$description/g" pack.mcmeta
 
       - name: format version name and title
         id: format_version_name

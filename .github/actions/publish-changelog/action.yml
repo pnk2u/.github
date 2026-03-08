@@ -107,7 +107,7 @@ runs:
           <a title="Download (Curseforge):&#10;$CF_VERSION_TITLE" href="$cf_download_url">
           <img width=26 src="https://img.shields.io/badge/--%23302a?style=flat&logo=curseforge"></a>
           </sub></sub></h2>
-          EOF
+        EOF
 
           sed -i "${spacer_line_number}r /tmp/footer.txt" CHANGELOG.md
           rm /tmp/footer.txt

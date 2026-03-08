@@ -12,43 +12,47 @@ runs:
   steps:
     - name: check for publish flag and prepare CHANGELOG.md
       shell: bash
+      env:
+        DEFAULT_BRANCH: ${{ inputs.default-branch }}
       run: |
         set -e
         if [[ ! -f CHANGELOG.md ]]; then
-          echo "Missing CHANGELOG.md"
+          echo "::error::Missing CHANGELOG.md"
           exit 1
         fi
-    
+
         first_line=$(head -n 1 CHANGELOG.md || true)
-    
+
         if echo "$first_line" | grep -qE '<!--\s*publish\s*=\s*true\s*-->' ; then
-          echo "Publish flag read: true. Starting publishing action."
-    
+          echo "::notice::Publish flag read: true. Starting publishing action."
+
           sed -i '1d' CHANGELOG.md
-          
+
           printf '\n\n---\n' >> CHANGELOG.md
 
+          printf "%s\n" "::notice::Appending changelog history link footer to CHANGELOG.md"
           printf "> Looking for changes of previous versions?  \n" >> CHANGELOG.md
-          printf "You can find them in the [changelog history](https://www.github.com/${GITHUB_REPOSITORY}/blob/${{ inputs.default-branch }}/CHANGELOG_history.md).\n" >> CHANGELOG.md
-    
+          printf "You can find them in the [changelog history](https://www.github.com/${GITHUB_REPOSITORY}/blob/${DEFAULT_BRANCH}/CHANGELOG_history.md).\n" >> CHANGELOG.md
+
         elif echo "$first_line" | grep -qE '<!--\s*publish\s*=\s*false\s*-->' ; then
-          echo "Publish flag read: false. Stopping publishing action."
+          echo "::notice::Publish flag read: false. Stopping publishing action."
           exit 1
-    
+
         else
-          echo "Missing publish flag in line 1. Skipping publishing action and exiting with error."
-          echo "Please add \`<!--publish=true-->\` or \`<!--publish=false-->\` to the first line of CHANGELOG.md."
+          echo "::error::Missing publish flag in line 1. Skipping publishing action."
+          echo "::error::Please add \`<!--publish=true-->\` or \`<!--publish=false-->\` to the first line of CHANGELOG.md."
           exit 1
         fi
-        
-        perl -pe 's|<ins>([^<]+)</ins>\s*\(([^)]*)\)|my $t=$1; my $p=$2; my @u=$p=~/href="([^"]+)"/g; my $u=$u[-1]; defined $u ? "<ins>[$t]($u)</ins>" : "<ins>$t</ins>"|ge' CHANGELOG.md > CHANGELOG_cf.md
-        
-        sed -i 's/<sub>\(.*\)<\/sub>/<sup>\1<\/sup>/g' CHANGELOG_cf.md
-        
-        printf 'Successfully prepared CHANGELOG.md and CHANGELOG_cf.md for publishing:'
-        printf '\n========================================\n'
-        cat CHANGELOG.md
-        printf '\n========================================\n'
-        cat CHANGELOG_cf.md
-        printf '\n========================================\n'
 
+        perl -pe 's|<ins>([^<]+)</ins>\s*\(([^)]*)\)|my $t=$1; my $p=$2; my @u=$p=~/href="([^"]+)"/g; my $u=$u[-1]; defined $u ? "<ins>[$t]($u)</ins>" : "<ins>$t</ins>"|ge' CHANGELOG.md > CHANGELOG_cf.md
+
+        sed -i 's/<sub>\(.*\)<\/sub>/<sup>\1<\/sup>/g' CHANGELOG_cf.md
+
+        echo "::notice::Successfully prepared CHANGELOG.md and CHANGELOG_cf.md for publishing."
+        echo "::group::Prepared changelog output"
+        echo "::debug::========================================"
+        cat CHANGELOG.md
+        echo "::debug::========================================"
+        cat CHANGELOG_cf.md
+        echo "::debug::========================================"
+        echo "::endgroup::"

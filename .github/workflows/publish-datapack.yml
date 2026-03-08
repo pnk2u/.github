@@ -57,7 +57,7 @@ jobs:
         uses: christian-draeger/read-properties@1.1.1
         with:
           path: './pack.properties'
-          properties: 'archives_base_name pack_name pack_version pack_description minecraft_version_supported minecraft_version_filter minecraft_version_name modrinth_id curseforge_id dependencies license'
+          properties: 'archives_base_name pack_name pack_name_short pack_version pack_description minecraft_version_supported minecraft_version_filter minecraft_version_name modrinth_id curseforge_id dependencies license'
 
       - name: set pack.mcmeta pack_description from pack.properties
         run: |

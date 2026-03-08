@@ -235,6 +235,7 @@ jobs:
           set -e
           mkdir -p out
           zip -r "${{ steps.format_version_name.outputs.jar_file_path_name }}" data pack.mcmeta pack.png fabric.mod.json META-INF/neoforge.mods.toml quilt.mod.json
+          sleep 5
         continue-on-error: false
 
       - name: upload jar to Modrinth

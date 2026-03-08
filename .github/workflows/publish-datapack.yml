@@ -75,22 +75,27 @@ jobs:
           mr_version_title="${{ steps.properties.outputs.pack_name }} $pack_version_number"
           cf_version_title="$pack_version_number - ${{ steps.properties.outputs.pack_name }}"
           file_name="${{ steps.properties.outputs.archives_base_name }}-${{ steps.properties.outputs.pack_version }}+${{ steps.properties.outputs.minecraft_version_name }}"
-          zip_file_path="out/$file_name.zip"
-          jar_file_path="out/$file_name.jar"
+          file_name_escaped="${{ steps.properties.outputs.archives_base_name }}-${{ steps.properties.outputs.pack_version }}+$escaped_version_name"
+          zip_file_path_name="out/$file_name.zip"
+          zip_file_path_glob="out/$file_name_escaped.zip"
+          jar_file_path_name="out/$file_name.jar"
+          jar_file_path_glob="out/$file_name_escaped.jar"
           echo "archives_base_name=$archives_base_name" >> "$GITHUB_OUTPUT"
           echo "pack_version_number=$pack_version_number" >> "$GITHUB_OUTPUT"
           echo "mr_version_title=$mr_version_title" >> "$GITHUB_OUTPUT"
           echo "cf_version_title=$cf_version_title" >> "$GITHUB_OUTPUT"
           echo "file_name=$file_name" >> "$GITHUB_OUTPUT"
-          echo "zip_file_path=$zip_file_path" >> "$GITHUB_OUTPUT"
-          echo "jar_file_path=$jar_file_path" >> "$GITHUB_OUTPUT"
+          echo "zip_file_path_name=$zip_file_path_name" >> "$GITHUB_OUTPUT"
+          echo "zip_file_path_glob=$zip_file_path_glob" >> "$GITHUB_OUTPUT"
+          echo "jar_file_path_name=$jar_file_path_name" >> "$GITHUB_OUTPUT"
+          echo "jar_file_path_glob=$jar_file_path_glob" >> "$GITHUB_OUTPUT"
           echo "universal_mod_id=$universal_mod_id" >> "$GITHUB_OUTPUT"
 
       - name: build datapack zip
         run: |
           set -e
           mkdir -p out
-          zip -r "${{ steps.format_version_name.outputs.zip_file_path }}" data pack.mcmeta pack.png
+          zip -r "${{ steps.format_version_name.outputs.zip_file_path_name }}" data pack.mcmeta pack.png
         continue-on-error: false
 
       - uses: Kir-Antipov/mc-publish@v3.3
@@ -113,7 +118,7 @@ jobs:
           dependencies: '${{ steps.properties.outputs.dependencies }}'
 
           version-type: release
-          files: "${{ steps.format_version_name.outputs.zip_file_path }}"
+          files: "${{ steps.format_version_name.outputs.zip_file_path_glob }}"
 
           changelog-file: CHANGELOG.md
 
@@ -135,7 +140,7 @@ jobs:
           dependencies: '${{ steps.properties.outputs.dependencies }}'
 
           version-type: release
-          files: "${{ steps.format_version_name.outputs.zip_file_path }}"
+          files: "${{ steps.format_version_name.outputs.zip_file_path_glob }}"
 
           changelog-file: CHANGELOG_cf.md
           retry-delay: 2000
@@ -229,7 +234,7 @@ jobs:
         run: |
           set -e
           mkdir -p out
-          zip -r "${{ steps.format_version_name.outputs.jar_file_path }}" data pack.mcmeta pack.png fabric.mod.json META-INF/neoforge.mods.toml quilt.mod.json
+          zip -r "${{ steps.format_version_name.outputs.jar_file_path_name }}" data pack.mcmeta pack.png fabric.mod.json META-INF/neoforge.mods.toml quilt.mod.json
         continue-on-error: false
 
       - name: upload jar to Modrinth
@@ -253,5 +258,5 @@ jobs:
 
           dependencies: '${{ steps.properties.outputs.dependencies }}'
           version-type: release
-          files: '${{ steps.format_version_name.outputs.jar_file_path }}'
+          files: "${{ steps.format_version_name.outputs.jar_file_path_glob }}"
           changelog-file: CHANGELOG.md

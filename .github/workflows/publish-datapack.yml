@@ -72,8 +72,8 @@ jobs:
           escaped_version_name=$(echo "${{ steps.properties.outputs.minecraft_version_name }}" | sed 's/(/\\(/g; s/)/\\)/g')
           echo "escaped_version_name=$escaped_version_name" >> "$GITHUB_OUTPUT"
           pack_version_number="${{ steps.properties.outputs.pack_version }} + ${{ steps.properties.outputs.minecraft_version_name }}"
-          mr_version_title="${{ steps.properties.outputs.pack_name }} $pack_version_number"
-          cf_version_title="$pack_version_number - ${{ steps.properties.outputs.pack_name }}"
+          mr_version_title="${{ steps.properties.outputs.pack_name_short }} $pack_version_number"
+          cf_version_title="$pack_version_number - ${{ steps.properties.outputs.pack_name_short }}"
           file_name="${{ steps.properties.outputs.archives_base_name }}-${{ steps.properties.outputs.pack_version }}+${{ steps.properties.outputs.minecraft_version_name }}"
           file_name_escaped="${{ steps.properties.outputs.archives_base_name }}-${{ steps.properties.outputs.pack_version }}+$escaped_version_name"
           zip_file_path_name="out/$file_name.zip"

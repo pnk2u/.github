@@ -44,9 +44,12 @@ runs:
           exit 1
         fi
 
-        perl -pe 's|<ins>([^<]+)</ins>\s*\(([^)]*)\)|my $t=$1; my $p=$2; my @u=$p=~/href="([^"]+)"/g; my $u=$u[-1]; defined $u ? "<ins>[$t]($u)</ins>" : "<ins>$t</ins>"|ge' CHANGELOG.md > CHANGELOG_cf.md
-
-        sed -i 's/<sub>\(.*\)<\/sub>/<sup>\1<\/sup>/g' CHANGELOG_cf.md
+        perl -0777 -pe 's{<ins>([^<]+)</ins>\s*\(&#x200A;(.*?)&#x200A;\)}{
+          my ($name, $block) = ($1, $2);
+          my @urls = ($block =~ /href="(https?:\/\/(?:www\.)?(?:curseforge\.com|modrinth\.com)[^"]*)"/g);
+          @urls ? "<ins>[$name]($urls[-1])</ins>" : $&
+        }gse; s{<sub\b([^>]*)>}{<sup$1>}g; s{</sub>}{</sup>}g' CHANGELOG.md > CHANGELOG_cf.md
+        
 
         echo "::notice::Successfully prepared CHANGELOG.md and CHANGELOG_cf.md for publishing."
         echo "::group::Prepared changelog output"

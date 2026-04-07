@@ -200,7 +200,7 @@ runs:
         git add README.md
 
         # Commit and push changes (avoid failing the whole job if there's nothing to commit)
-        git commit -m "Write to changelog history and reset changelog file ($VERSION)" || {
+        git commit -m "Update CHANGELOG_history and reset CHANGELOG ($VERSION)" || {
           echo "::notice::No changes to commit."
           exit 0
         }

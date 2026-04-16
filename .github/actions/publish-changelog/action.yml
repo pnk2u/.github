@@ -87,8 +87,8 @@ runs:
           echo >> CHANGELOG.md
         fi
 
-          # Find separator_v and replace MR size with GH size
-          sed -i 's/<!--SEPARATOR_V:MR--><img width=5 height=8/<!--SEPARATOR_V:GH--><img width=7 height=10/g' CHANGELOG.md
+          # Replace the full GH separator HTML snippet with thin spaces
+          sed -i 's#</sub><!--SEPARATOR_V:GH--><img width=7 height=10 src="https://raw.githubusercontent.com/pnk2u/resources/main/ModProjects/shared/pres/icon/separator_v.svg"><sub>#\&#x200A;\&#x200A;\&#x200A;#g' CHANGELOG.md
 
           # Add anchor link for the version at the top
           sed -i "1i<a name=\"$VERSION\"></a>" CHANGELOG.md
@@ -102,8 +102,7 @@ runs:
 
         <h2><sub><sub><sup><ins>Download $VERSION_NUMBER</ins>:</sup>&#x200A;
         <a title="Download (Modrinth):&#10;$MR_VERSION_TITLE" href="$mr_download_url">
-        <img width=26 src="https://img.shields.io/badge/-%20-%23032a?style=flat&logo=modrinth"></a>
-        <sup><img width=7 height=10 src="https://raw.githubusercontent.com/pnk2u/resources/main/ModProjects/shared/pres/icon/separator_v.svg"></sup>
+        <img width=26 src="https://img.shields.io/badge/-%20-%23032a?style=flat&logo=modrinth"></a>&#x200A;
         <a title="Download (Curseforge):&#10;$CF_VERSION_TITLE" href="$cf_download_url">
         <img width=26 src="https://img.shields.io/badge/--%23302a?style=flat&logo=curseforge"></a>
         </sub></sub></h2>

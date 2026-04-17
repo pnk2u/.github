@@ -96,6 +96,8 @@ jobs:
           files: "${{ steps.format_version_name.outputs.file_path_glob }}"
 
           changelog-file: CHANGELOG_cf.md
+          retry-attempts: '6'
+          retry-delay: '11000'
 
       - uses: pnk2u/.github/.github/actions/publish-changelog@main
         with:

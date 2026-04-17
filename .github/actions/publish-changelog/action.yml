@@ -88,7 +88,7 @@ runs:
         fi
 
           # Replace the full GH separator HTML snippet with thin spaces
-          sed -i 's#</sub><!--SEPARATOR_V:GH--><img width=7 height=10 src="https://raw.githubusercontent.com/pnk2u/resources/main/ModProjects/shared/pres/icon/separator_v.svg"><sub>#\&#x200A;\&#x200A;\&#x200A;#g' CHANGELOG.md
+          sed -i 's|</sub><!--SEPARATOR_V:GH--><img width=7 height=10 src="https://raw.githubusercontent.com/pnk2u/resources/main/ModProjects/shared/pres/icon/separator_v.svg"><sub>|&#x200A;&#x200A;&#x200A;|g' CHANGELOG.md
 
           # Add anchor link for the version at the top
           sed -i "1i<a name=\"$VERSION\"></a>" CHANGELOG.md

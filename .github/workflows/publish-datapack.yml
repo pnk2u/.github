@@ -98,7 +98,7 @@ jobs:
           zip -r "${{ steps.format_version_name.outputs.zip_file_path_name }}" data pack.mcmeta pack.png
         continue-on-error: false
 
-      - uses: Kir-Antipov/mc-publish@v3.3
+      - uses: Kir-Antipov/mc-publish@v3.3.1
         id: publish-mr
         with:
           modrinth-id: '${{ steps.properties.outputs.modrinth_id }}'
@@ -122,7 +122,7 @@ jobs:
 
           changelog-file: CHANGELOG.md
 
-      - uses: Kir-Antipov/mc-publish@v3.3
+      - uses: Kir-Antipov/mc-publish@v3.3.1
         id: publish-cf
         with:
           curseforge-id: '${{ steps.properties.outputs.curseforge_id }}'
@@ -239,7 +239,7 @@ jobs:
         continue-on-error: false
 
       - name: upload jar to Modrinth
-        uses: Kir-Antipov/mc-publish@v3.3
+        uses: Kir-Antipov/mc-publish@v3.3.1
         with:
           modrinth-id: '${{ steps.properties.outputs.modrinth_id }}'
           modrinth-featured: true

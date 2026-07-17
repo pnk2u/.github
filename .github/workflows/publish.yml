@@ -63,7 +63,7 @@ jobs:
           echo "cf_version_title=$cf_version_title" >> "$GITHUB_OUTPUT"
           echo "file_path_glob=$file_path_glob" >> "$GITHUB_OUTPUT"
 
-      - uses: Kir-Antipov/mc-publish@v3.3
+      - uses: Kir-Antipov/mc-publish@v3.3.1
         id: publish-mr
         with:
           modrinth-featured: true
@@ -81,7 +81,7 @@ jobs:
 
           changelog-file: CHANGELOG.md
 
-      - uses: Kir-Antipov/mc-publish@v3.3
+      - uses: Kir-Antipov/mc-publish@v3.3.1
         id: publish-cf
         with:
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
